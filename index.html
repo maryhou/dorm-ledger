@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>宿舍小帳本 · Dorm Ledger</title>
+  <meta name="description" content="室友共用物品記帳，用一個加一，月底一次結清。">
+  <meta name="theme-color" content="#F6F5F1">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="宿舍小帳本">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="greeting">
+      <h1>宿舍小帳本 <span class="wiggle">🥚</span></h1>
+      <p id="subGreeting">大家一起用，月底一起算 ✨</p>
+    </div>
+    <div class="header-badge" id="headerBadge" hidden></div>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <button id="fab" class="fab" aria-label="快速新增">＋</button>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="home"><span class="tab-icon">🧺</span><span class="tab-label">物品</span></button>
+    <button class="tab" data-tab="logs"><span class="tab-icon">🧾</span><span class="tab-label">紀錄</span></button>
+    <button class="tab" data-tab="settle"><span class="tab-icon">💰</span><span class="tab-label">結算</span></button>
+    <button class="tab" data-tab="members"><span class="tab-icon">🏠</span><span class="tab-label">室友</span></button>
+  </nav>
+
+  <div id="sheetRoot"></div>
+  <div id="toastRoot" class="toast-root"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
