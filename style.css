@@ -373,7 +373,13 @@ input, select {
 .btn:active { transform: scale(0.97); }
 .btn-grad { background: var(--grad); color: var(--ink); box-shadow: 0 8px 20px rgba(220, 210, 100, 0.5); }
 .btn-dark { background: var(--ink); color: #fff; }
-.btn-ghost { background: var(--bg); color: var(--muted); font-weight: 700; }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  border: 2px solid currentColor;
+  padding: 13px 15px;
+}
 .btn[disabled] { opacity: 0.4; pointer-events: none; }
 
 /* ---------- Empty state ---------- */
