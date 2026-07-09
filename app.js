@@ -416,10 +416,18 @@ function sheetUseItem(itemId) {
   const left = Math.max(0, it.stock - itemUsed(it.id));
   useCount = 1;
 
-  const members = db.members.map((m) => `
-    <button class="pick-member" onclick="useItem('${it.id}','${m.id}')" style="border:2px solid ${m.color[0]}">
+  const members = db.members.map((m) => {
+    const usedByM = db.logs
+      .filter((l) => l.itemId === it.id && l.memberId === m.id)
+      .reduce((s, l) => s + l.count, 0);
+    const undoable = db.logs.some((l) => l.itemId === it.id && l.memberId === m.id && !l.settledId);
+    return `
+    <div class="pick-member" onclick="useItem('${it.id}','${m.id}')" style="border:2px solid ${m.color[0]}">
       ${avatarHTML(m, "lg")} ${esc(m.name)}
-    </button>`).join("");
+      <span class="pick-count">${usedByM > 0 ? `用了 ${usedByM} 個` : "還沒用過"}</span>
+      ${undoable ? `<button class="pick-minus" onclick="undoUse(event,'${it.id}','${m.id}')" aria-label="退回一個">−</button>` : ""}
+    </div>`;
+  }).join("");
 
   openSheet(`
     <h2>${esc(it.emoji)} ${esc(it.name)}</h2>
@@ -457,6 +465,21 @@ function useItem(itemId, memberId) {
   toast(self
     ? `${m.emoji} ${m.name} 用了自己的 ${it.name} ×${count} 😎`
     : `${m.emoji} ${m.name} 用了 ${it.name} ×${count}，記 ${fmt$(count * it.price)} ✏️`);
+}
+
+function undoUse(ev, itemId, memberId) {
+  ev.stopPropagation();
+  const candidates = db.logs.filter((l) => l.itemId === itemId && l.memberId === memberId && !l.settledId);
+  if (candidates.length === 0) { toast("已結清的紀錄不能退回 🔒"); return; }
+  const last = candidates.reduce((a, b) => (b.ts > a.ts ? b : a));
+  if (last.count > 1) last.count -= 1;
+  else db.logs = db.logs.filter((l) => l.id !== last.id);
+  save();
+  const m = member(memberId);
+  const it = db.items.find((i) => i.id === itemId);
+  toast(`↩️ 退回 ${m.name} 的 1 個${it ? " " + it.name : ""}`);
+  sheetUseItem(itemId); // 重建面板，更新「用了幾個」與剩餘量
+  render();
 }
 
 function delLog(id) {
@@ -617,7 +640,7 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet
 Object.assign(window, {
   sheetAddMember, addMember, delMember, pickEmoji, pickChip,
   sheetAddItem, applyPreset, addItem,
-  sheetUseItem, stepUse, useItem, delLog,
+  sheetUseItem, stepUse, useItem, undoUse, delLog,
   sheetRestock, restock, delItem,
   sheetConfirmSettle, doSettle, resetAll, loadDemo, closeSheet,
 });
