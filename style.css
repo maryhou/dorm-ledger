@@ -6,8 +6,8 @@
   --muted: #92929B;
   --line: #EFEEE8;
 
-  --lime: #DCE84F;
-  --lime-soft: #F3F8CF;
+  --lime: #FF8A3D;
+  --lime-soft: #FFE9CF;
   --pink: #F9B8D2;
   --pink-soft: #FDEBF3;
   --blue: #A9D9F2;
@@ -19,7 +19,7 @@
   --red: #FF6B6B;
   --green: #7BC96F;
 
-  --grad: linear-gradient(100deg, #DCE84F 0%, #F6E2A8 55%, #F9B8D2 100%);
+  --grad: linear-gradient(100deg, #F9D42E 0%, #FFB13D 52%, #FF8A3D 100%);
   --radius: 24px;
   --shadow: 0 10px 30px rgba(28, 28, 30, 0.07);
   --tabbar-h: 74px;
@@ -210,11 +210,12 @@ input, select {
   height: 34px;
   border-radius: 999px;
   background: var(--lime);
+  color: #fff;
   font-size: 19px;
   font-weight: 800;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 12px rgba(190, 205, 40, 0.45);
+  box-shadow: 0 4px 12px rgba(255, 138, 61, 0.4);
 }
 
 .item-card.is-empty .item-plus { background: var(--line); box-shadow: none; color: var(--muted); }
@@ -283,25 +284,16 @@ input, select {
 
 /* ---------- Settle ---------- */
 .hero-card {
-  background: var(--grad);
+  background: linear-gradient(45deg, #F9D42E 0%, #FBC733 40%, #FFB13D 74%, #FF8A3D 100%);
   border-radius: 28px;
   padding: 22px;
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
 }
-.hero-card::after {
-  content: "💸";
-  position: absolute;
-  right: 14px;
-  bottom: 10px;
-  font-size: 44px;
-  opacity: 0.55;
-  transform: rotate(-10deg);
-}
-.hero-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: rgba(28,28,30,0.62); }
-.hero-amt { font-size: 40px; font-weight: 800; margin-top: 2px; }
-.hero-sub { font-size: 12.5px; color: rgba(28,28,30,0.62); margin-top: 2px; font-weight: 600; }
+.hero-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: rgba(255,87,0,0.78); }
+.hero-amt { font-size: 40px; font-weight: 800; margin-top: 2px; color: #ff5700; }
+.hero-sub { font-size: 12.5px; color: rgba(255,87,0,0.78); margin-top: 2px; font-weight: 600; }
 
 .transfer-row {
   display: flex;
@@ -372,7 +364,7 @@ input, select {
 }
 .btn .icon-line { width: 17px; height: 17px; }
 .btn:active { transform: scale(0.97); }
-.btn-grad { background: var(--grad); color: var(--ink); box-shadow: 0 8px 20px rgba(220, 210, 100, 0.5); }
+.btn-grad { background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(252, 228, 74, 0.55); }
 .btn-dark { background: var(--ink); color: #fff; }
 .btn-ghost {
   background: transparent;
@@ -390,6 +382,8 @@ input, select {
   color: var(--muted);
 }
 .empty .big { font-size: 56px; display: block; margin-bottom: 10px; }
+.empty .empty-gif { display: block; margin: 0 auto 10px; width: 160px; height: 160px; object-fit: contain; border-radius: 20px; }
+.inline-img { width: 1.3em; height: 1.3em; object-fit: contain; vertical-align: -0.28em; border-radius: 5px; }
 .empty h3 { color: var(--ink); margin: 0 0 6px; font-size: 18px; }
 .empty p { margin: 0 0 18px; font-size: 13.5px; }
 
@@ -398,14 +392,14 @@ input, select {
   position: fixed;
   right: max(20px, calc(50vw - 260px));
   bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 18px);
-  width: 58px;
-  height: 58px;
+  width: 50px;
+  height: 50px;
   border-radius: 999px;
-  background: var(--ink);
+  background: var(--grad);
   color: #fff;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
-  box-shadow: 0 12px 28px rgba(28, 28, 30, 0.3);
+  box-shadow: 0 10px 24px rgba(255, 138, 61, 0.4);
   z-index: 30;
   display: grid;
   place-items: center;

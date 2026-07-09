@@ -1,5 +1,5 @@
 /* 宿舍小帳本 service worker — cache-first, offline-ready */
-const CACHE = "dorm-ledger-v1";
+const CACHE = "dorm-ledger-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,10 @@ const ASSETS = [
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "./public/Assets/Home_empty.jpg",
+  "./public/Assets/Record_empty.jpg",
+  "./public/Assets/Eye.jpg",
+  "./public/Assets/Smile.jpg",
 ];
 
 self.addEventListener("install", (e) => {

@@ -109,7 +109,7 @@ function subGreeting(total) {
   if (db.members.length === 0) return "先把室友加進來吧 👇";
   if (total === 0) return "帳目乾乾淨淨，感情好好 💚";
   if (total < 100) return "小錢小錢，月底一起算 ✨";
-  return "累積中…月底一次結清 💸";
+  return "累積中…月底一次結清";
 }
 
 function avatarHTML(m, size = "") {
@@ -121,12 +121,12 @@ function renderHome() {
   if (db.members.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <span class="big">🏠</span>
+        <img class="empty-gif" src="public/Assets/Home_empty.jpg" alt="" width="160" height="160">
         <h3>歡迎搬進來！</h3>
         <p>先加入室友，再開始記東西。<br>誰買的、誰用的，通通記得清清楚楚。</p>
         <button class="btn btn-grad" onclick="sheetAddMember()">加入第一位室友</button>
         <div style="height:10px"></div>
-        <button class="btn btn-ghost" onclick="loadDemo()">先看示範資料 👀</button>
+        <button class="btn btn-ghost" onclick="loadDemo()">先看示範資料 <img class="inline-img" src="public/Assets/Eye.jpg" alt="" width="22" height="22"></button>
       </div>`;
     return;
   }
@@ -177,7 +177,7 @@ function renderLogs() {
   if (logs.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <span class="big">🧾</span>
+        <img class="empty-gif" src="public/Assets/Record_empty.jpg" alt="" width="160" height="160">
         <h3>還沒有使用紀錄</h3>
         <p>回到「物品」頁，用了什麼點一下 +1，<br>這裡就會幫大家記著。</p>
       </div>`;
@@ -239,7 +239,7 @@ function renderSettle() {
             <span class="transfer-amt">${fmt$(t.amount)}</span>
           </div>`;
       }).join("")
-    : `<div class="card" style="text-align:center;color:var(--muted);font-size:14px">目前沒有人欠誰錢 🎉</div>`;
+    : `<div class="card" style="text-align:center;color:var(--muted);font-size:14px">目前沒有人欠誰錢 <img class="inline-img" src="public/Assets/Smile.jpg" alt="" width="22" height="22"></div>`;
 
   const balanceHTML = db.members.map((m) => {
     const v = Math.round(net[m.id] || 0);
