@@ -442,7 +442,7 @@ function sheetUseItem(itemId) {
       </div>
       <p class="sheet-sub" style="text-align:center;margin-top:-8px">誰用的？點頭像直接記帳 👇</p>
       <div class="pick-grid">${members}</div>`
-      : `<div class="empty" style="padding:18px"><span class="big">🕳️</span><p>用完啦！要再買記得補貨</p></div>`}
+      : `<div class="empty" style="padding:18px"><img class="empty-gif" src="public/Assets/Happy.jpg" alt="" width="160" height="160"><p>用完啦！要再買記得補貨</p></div>`}
     <div class="sheet-links">
       <button onclick="sheetRestock('${it.id}')">${ICONS.box} 補貨</button>
       <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除物品</button>
