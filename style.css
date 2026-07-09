@@ -357,7 +357,10 @@ input, select {
 
 /* ---------- Buttons ---------- */
 .btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   width: 100%;
   text-align: center;
   padding: 15px;
@@ -366,6 +369,7 @@ input, select {
   font-size: 16px;
   transition: transform 0.12s ease;
 }
+.btn .icon-line { width: 17px; height: 17px; }
 .btn:active { transform: scale(0.97); }
 .btn-grad { background: var(--grad); color: var(--ink); box-shadow: 0 8px 20px rgba(220, 210, 100, 0.5); }
 .btn-dark { background: var(--ink); color: #fff; }

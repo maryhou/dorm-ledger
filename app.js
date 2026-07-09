@@ -20,6 +20,8 @@ const MEMBER_EMOJIS = ["🐣","🐰","🐱","🐻","🦊","🐸","🐼","🦄","
 const ICONS = {
   box: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>`,
   trash: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v5.5M14 11v5.5"/></svg>`,
+  pencil: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3zM15 5l4 4"/></svg>`,
+  coin: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.3c-.5-.9-1.5-1.4-2.8-1.4-1.7 0-2.9.9-2.9 2.1 0 2.9 5.8 1.2 5.8 4.1 0 1.2-1.2 2.1-2.9 2.1-1.3 0-2.3-.5-2.8-1.4M12 6.2v11.6"/></svg>`,
 };
 
 let db = load();
@@ -269,7 +271,7 @@ function renderSettle() {
     ${db.members.length ? `<div class="section-title">各自盈虧</div><div class="card">${balanceHTML}</div>` : ""}
 
     <div style="height:18px"></div>
-    <button class="btn btn-dark" ${logs.length === 0 ? "disabled" : ""} onclick="sheetConfirmSettle()">💰 一鍵結清這一期</button>
+    <button class="btn btn-dark" ${logs.length === 0 ? "disabled" : ""} onclick="sheetConfirmSettle()">${ICONS.coin} 一鍵結清這一期</button>
 
     ${historyHTML ? `<div class="section-title">歷史結算</div>${historyHTML}` : ""}`;
 }
@@ -378,7 +380,7 @@ function sheetAddItem() {
       <div class="field"><label>買了幾個</label><input id="fItemStock" class="input" type="number" inputmode="numeric" placeholder="10"></div>
     </div>
     <div class="field"><label>誰買的（用的人付錢給他）</label><div class="chip-row" id="fItemBuyer">${buyers}</div></div>
-    <button class="btn btn-grad" onclick="addItem()">記上去 ✏️</button>`);
+    <button class="btn btn-grad" onclick="addItem()">記上去 ${ICONS.pencil}</button>`);
 }
 
 function applyPreset(emoji, name, price) {
@@ -504,7 +506,7 @@ function sheetRestock(itemId) {
       <div class="field"><label>1 個多少錢</label><input id="fRestockP" class="input" type="number" inputmode="decimal" value="${it.price}"></div>
     </div>
     <div class="field"><label>這次誰買的</label><div class="chip-row" id="fRestockBuyer">${buyers}</div></div>
-    <button class="btn btn-grad" onclick="restock('${it.id}')">補上去 📦</button>`);
+    <button class="btn btn-grad" onclick="restock('${it.id}')">補上去 ${ICONS.box}</button>`);
 }
 
 function restock(itemId) {
