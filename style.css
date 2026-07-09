@@ -494,6 +494,7 @@ input, select {
   outline: none;
 }
 .input:focus { border-color: var(--lime); background: #fff; }
+.input::placeholder { color: #C9C9CF; font-weight: 600; opacity: 1; }
 
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; }
