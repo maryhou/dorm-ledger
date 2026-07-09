@@ -377,7 +377,7 @@ input, select {
   background: transparent;
   color: var(--muted);
   font-weight: 700;
-  border: 2px solid currentColor;
+  border: 2px solid #DBDBE0;
   padding: 13px 15px;
 }
 .btn[disabled] { opacity: 0.4; pointer-events: none; }
