@@ -271,7 +271,7 @@ function renderSettle() {
     ${db.members.length ? `<div class="section-title">各自盈虧</div><div class="card">${balanceHTML}</div>` : ""}
 
     <div style="height:18px"></div>
-    <button class="btn btn-dark" ${logs.length === 0 ? "disabled" : ""} onclick="sheetConfirmSettle()">${ICONS.coin} 一鍵結清這一期</button>
+    <button class="btn btn-grad" ${logs.length === 0 ? "disabled" : ""} onclick="sheetConfirmSettle()">${ICONS.coin} 一鍵結清這一期</button>
 
     ${historyHTML ? `<div class="section-title">歷史結算</div>${historyHTML}` : ""}`;
 }
@@ -554,7 +554,7 @@ function sheetConfirmSettle() {
     <p class="sheet-sub">照下面轉完帳，按確認就整期歸檔（不能反悔喔）</p>
     ${lines}
     <div style="height:10px"></div>
-    <button class="btn btn-dark" onclick="doSettle()">✓ 大家都轉好了，結清！</button>
+    <button class="btn btn-grad" onclick="doSettle()">✓ 大家都轉好了，結清！</button>
     <div style="height:8px"></div>
     <button class="btn btn-ghost" onclick="closeSheet()">再等等</button>`);
 }
