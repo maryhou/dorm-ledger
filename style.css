@@ -579,8 +579,18 @@ input, select {
 .stepper .count { font-size: 30px; font-weight: 800; min-width: 52px; text-align: center; }
 
 .sheet-links { display: flex; justify-content: center; gap: 22px; margin-top: 6px; }
-.sheet-links button { color: var(--muted); font-size: 13px; font-weight: 700; padding: 6px; }
+.sheet-links button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px;
+}
 .sheet-links button.danger { color: var(--red); }
+
+.icon-line { width: 15px; height: 15px; flex: none; }
 
 /* ---------- Toast ---------- */
 .toast-root {

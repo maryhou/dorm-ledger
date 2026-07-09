@@ -16,6 +16,12 @@ const PALETTE = [
 const ITEM_EMOJIS = ["🥚","🧻","🧴","🧼","🧃","🥛","🍜","☕","🍞","🧀","🍚","🧂","🫧","🧊","🍌","🍫","🧺","💊","🔋","🗑️"];
 const MEMBER_EMOJIS = ["🐣","🐰","🐱","🐻","🦊","🐸","🐼","🦄","🐯","🐨","🐷","🦉"];
 
+/* outline icons（與 tab bar 同一套 stroke 風格） */
+const ICONS = {
+  box: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>`,
+  trash: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v5.5M14 11v5.5"/></svg>`,
+};
+
 let db = load();
 let tab = "home";
 
@@ -428,8 +434,8 @@ function sheetUseItem(itemId) {
       <div class="pick-grid">${members}</div>`
       : `<div class="empty" style="padding:18px"><span class="big">🕳️</span><p>用完啦！要再買記得補貨</p></div>`}
     <div class="sheet-links">
-      <button onclick="sheetRestock('${it.id}')">📦 補貨</button>
-      <button class="danger" onclick="delItem('${it.id}')">🗑️ 刪除物品</button>
+      <button onclick="sheetRestock('${it.id}')">${ICONS.box} 補貨</button>
+      <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除物品</button>
     </div>`);
 }
 
