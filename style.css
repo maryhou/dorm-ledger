@@ -382,7 +382,7 @@ input, select {
   color: var(--muted);
 }
 .empty .big { font-size: 56px; display: block; margin-bottom: 10px; }
-.empty .empty-gif { display: block; margin: 0 auto 10px; width: 160px; height: 160px; object-fit: contain; border-radius: 20px; }
+.empty .empty-gif { display: block; margin: 0 auto 10px; width: 200px; height: 200px; object-fit: contain; border-radius: 20px; }
 .inline-img { width: 1.3em; height: 1.3em; object-fit: contain; vertical-align: -0.28em; border-radius: 5px; }
 .empty h3 { color: var(--ink); margin: 0 0 6px; font-size: 18px; }
 .empty p { margin: 0 0 18px; font-size: 13.5px; }
@@ -499,6 +499,7 @@ input, select {
 }
 .input:focus { border-color: var(--lime); background: #fff; }
 .input::placeholder { color: #C9C9CF; font-weight: 600; opacity: 1; }
+.input:disabled { color: var(--muted); opacity: 0.55; }
 
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; }
@@ -539,6 +540,25 @@ input, select {
   font-size: 14px;
 }
 .chip.sel { border-color: var(--ink); background: var(--lime-soft); }
+.chip:disabled { opacity: 0.4; }
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 2px 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.check-row input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin: 1px 0 0;
+  accent-color: var(--lime);
+}
 
 .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .preset {
@@ -553,8 +573,8 @@ input, select {
 .pick-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 12px;
-  margin: 6px 0 16px;
+  gap: 42px 12px; /* 頭像探出卡片頂，換行時要留頭 */
+  margin: 38px 0 16px; /* 同上：第一排的頭像空間 */
 }
 .pick-member {
   position: relative;
@@ -564,30 +584,26 @@ input, select {
   gap: 5px;
   background: var(--bg);
   border-radius: 20px;
-  padding: 14px 6px 11px;
+  padding: 8px 6px 11px;
   font-weight: 800;
   font-size: 13.5px;
   cursor: pointer;
   transition: transform 0.12s ease;
 }
+.pick-member .avatar.lg { margin-top: -40px; } /* 頭像一半以上探出外框，版面活潑 */
 .pick-member:active { transform: scale(0.92); }
 
 .pick-count { font-size: 11px; font-weight: 700; color: var(--muted); }
 
 .pick-minus {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
+  margin-top: 2px;
+  padding: 3px 11px;
   border-radius: 999px;
   background: var(--card);
   box-shadow: var(--shadow);
   color: var(--muted);
-  font-size: 17px;
-  font-weight: 800;
-  display: grid;
-  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
 }
 .pick-minus:active { background: var(--pink-soft); color: #D2477F; }
 

@@ -49,7 +49,9 @@ function member(id) {
 }
 
 function itemUsed(itemId) {
-  return db.logs.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.count, 0);
+  // 只算 resetAt（補貨勾「歸零重新算」的時間點）之後的用量；金額結算不受影響
+  const epoch = db.items.find((i) => i.id === itemId)?.resetAt || 0;
+  return db.logs.filter((l) => l.itemId === itemId && l.ts >= epoch).reduce((s, l) => s + l.count, 0);
 }
 
 function unsettledLogs() { return db.logs.filter((l) => !l.settledId); }
@@ -121,7 +123,7 @@ function renderHome() {
   if (db.members.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <img class="empty-gif" src="public/Assets/Home_empty.jpg" alt="" width="160" height="160">
+        <img class="empty-gif" src="public/Assets/Home_empty.jpg" alt="" width="200" height="200">
         <h3>歡迎搬進來！</h3>
         <p>先加入室友，再開始記東西。<br>誰買的、誰用的，通通記得清清楚楚。</p>
         <button class="btn btn-grad" onclick="sheetAddMember()">加入第一位室友</button>
@@ -177,7 +179,7 @@ function renderLogs() {
   if (logs.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <img class="empty-gif" src="public/Assets/Record_empty.jpg" alt="" width="160" height="160">
+        <img class="empty-gif" src="public/Assets/Record_empty.jpg" alt="" width="200" height="200">
         <h3>還沒有使用紀錄</h3>
         <p>回到「物品」頁，用了什麼點一下 +1，<br>這裡就會幫大家記著。</p>
       </div>`;
@@ -418,16 +420,17 @@ function sheetUseItem(itemId) {
   const left = Math.max(0, it.stock - itemUsed(it.id));
   useCount = 1;
 
+  const epoch = it.resetAt || 0; // 歸零重新算之後的用量才顯示
   const members = db.members.map((m) => {
     const usedByM = db.logs
-      .filter((l) => l.itemId === it.id && l.memberId === m.id)
+      .filter((l) => l.itemId === it.id && l.memberId === m.id && l.ts >= epoch)
       .reduce((s, l) => s + l.count, 0);
-    const undoable = db.logs.some((l) => l.itemId === it.id && l.memberId === m.id && !l.settledId);
+    const undoable = db.logs.some((l) => l.itemId === it.id && l.memberId === m.id && l.ts >= epoch && !l.settledId);
     return `
     <div class="pick-member" onclick="useItem('${it.id}','${m.id}')" style="border:2px solid ${m.color[0]}">
       ${avatarHTML(m, "lg")} ${esc(m.name)}
       <span class="pick-count">${usedByM > 0 ? `用了 ${usedByM} 個` : "還沒用過"}</span>
-      ${undoable ? `<button class="pick-minus" onclick="undoUse(event,'${it.id}','${m.id}')" aria-label="退回一個">−</button>` : ""}
+      ${undoable ? `<button class="pick-minus" onclick="undoUse(event,'${it.id}','${m.id}')" aria-label="退回一個">− 退回</button>` : ""}
     </div>`;
   }).join("");
 
@@ -440,9 +443,9 @@ function sheetUseItem(itemId) {
         <span class="count" id="useCount">1</span>
         <button onclick="stepUse(1)">＋</button>
       </div>
-      <p class="sheet-sub" style="text-align:center;margin-top:-8px">誰用的？點頭像直接記帳 👇</p>
+      <p class="sheet-sub" style="text-align:center;margin-top:-8px">先按 ＋− 調好用了幾個，再點頭像記到他帳上 👇</p>
       <div class="pick-grid">${members}</div>`
-      : `<div class="empty" style="padding:18px"><img class="empty-gif" src="public/Assets/Happy.jpg" alt="" width="160" height="160"><p>用完啦！要再買記得補貨</p></div>`}
+      : `<div class="empty" style="padding:18px"><img class="empty-gif" src="public/Assets/Happy.jpg" alt="" width="200" height="200"><p>用完啦！要再買記得補貨</p></div>`}
     <div class="sheet-links">
       <button onclick="sheetRestock('${it.id}')">${ICONS.box} 補貨</button>
       <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除物品</button>
@@ -496,32 +499,56 @@ function delLog(id) {
 function sheetRestock(itemId) {
   const it = db.items.find((i) => i.id === itemId);
   if (!it) return;
+  // 還有剩貨時鎖定同買家、同單價：剩下的舊庫存會跟著 item 目前的 price/buyerId 記帳，
+  // 中途換人或改價會把舊貨算到新人/新價頭上
+  const left = Math.max(0, it.stock - itemUsed(it.id));
+  const locked = left > 0;
   const buyers = db.members.map((m) =>
-    `<button class="chip ${m.id === it.buyerId ? "sel" : ""}" data-id="${m.id}" onclick="pickChip(this)">${avatarHTML(m, "sm")} ${esc(m.name)}</button>`).join("");
+    `<button class="chip ${m.id === it.buyerId ? "sel" : ""}" data-id="${m.id}" ${locked && m.id !== it.buyerId ? "disabled" : ""} onclick="pickChip(this)">${avatarHTML(m, "sm")} ${esc(m.name)}</button>`).join("");
   openSheet(`
     <h2>補貨 ${esc(it.emoji)} ${esc(it.name)}</h2>
-    <p class="sheet-sub">之前的使用紀錄照舊，新的價錢從現在開始算</p>
+    <p class="sheet-sub">${locked
+      ? `還剩 ${left} 個沒用完，照原價由 ${esc(member(it.buyerId).name)} 補；想換人或改價，勾下面「重新開一批」`
+      : "之前的使用紀錄照舊，新的價錢從現在開始算"}</p>
     <div class="field-row">
       <div class="field"><label>這次買幾個</label><input id="fRestockN" class="input" type="number" inputmode="numeric" placeholder="10"></div>
-      <div class="field"><label>1 個多少錢</label><input id="fRestockP" class="input" type="number" inputmode="decimal" value="${it.price}"></div>
+      <div class="field"><label>1 個多少錢</label><input id="fRestockP" class="input" type="number" inputmode="decimal" value="${it.price}" ${locked ? "disabled" : ""}></div>
     </div>
     <div class="field"><label>這次誰買的</label><div class="chip-row" id="fRestockBuyer">${buyers}</div></div>
+    <label class="check-row"><input type="checkbox" id="fRestockReset" onchange="toggleRestockReset(this.checked,'${it.id}')"><span>重新開一批：${locked ? `剩下的 ${left} 個不要了，` : ""}數量從 0 重新數（誰欠誰錢不受影響）</span></label>
     <button class="btn btn-grad" onclick="restock('${it.id}')">補上去 ${ICONS.box}</button>`);
+}
+
+function toggleRestockReset(checked, itemId) {
+  const it = db.items.find((i) => i.id === itemId);
+  if (!it) return;
+  if (it.stock - itemUsed(it.id) <= 0) return; // 本來就沒鎖，不用切換
+  $("#fRestockP").disabled = !checked;
+  document.querySelectorAll("#fRestockBuyer .chip").forEach((c) => {
+    c.disabled = !checked && c.dataset.id !== it.buyerId;
+  });
 }
 
 function restock(itemId) {
   const it = db.items.find((i) => i.id === itemId);
-  const n = parseInt($("#fRestockN").value, 10);
-  const p = parseFloat($("#fRestockP").value);
-  const buyerId = $("#fRestockBuyer .sel")?.dataset.id;
   if (!it) return;
+  const reset = $("#fRestockReset")?.checked;
+  const locked = !reset && it.stock - itemUsed(it.id) > 0; // 還有剩且沒歸零 → 不能換人/改價
+  const n = parseInt($("#fRestockN").value, 10);
+  const p = locked ? it.price : parseFloat($("#fRestockP").value);
+  const buyerId = locked ? it.buyerId : $("#fRestockBuyer .sel")?.dataset.id;
   if (!(n > 0)) { toast("數量要至少 1 個 🔢"); return; }
   if (!(p > 0)) { toast("單價要大於 0 💰"); return; }
-  it.stock += n;
+  if (reset) {
+    it.resetAt = Date.now(); // 舊用量從此不計入剩餘量；帳款（logs）原封不動
+    it.stock = n;
+  } else {
+    it.stock += n;
+  }
   it.price = p;
   it.buyerId = buyerId || it.buyerId;
   save(); closeSheet(); render();
-  toast(`${it.emoji} ${it.name} 補了 ${n} 個！`);
+  toast(reset ? `${it.emoji} ${it.name} 重新開一批，這次 ${n} 個！` : `${it.emoji} ${it.name} 補了 ${n} 個！`);
 }
 
 function delItem(itemId) {
@@ -643,7 +670,7 @@ Object.assign(window, {
   sheetAddMember, addMember, delMember, pickEmoji, pickChip,
   sheetAddItem, applyPreset, addItem,
   sheetUseItem, stepUse, useItem, undoUse, delLog,
-  sheetRestock, restock, delItem,
+  sheetRestock, restock, toggleRestockReset, delItem,
   sheetConfirmSettle, doSettle, resetAll, loadDemo, closeSheet,
 });
 
