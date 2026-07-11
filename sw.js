@@ -1,5 +1,5 @@
 /* 宿舍小帳本 service worker — cache-first, offline-ready */
-const CACHE = "dorm-ledger-v10";
+const CACHE = "dorm-ledger-v11";
 const ASSETS = [
   "./",
   "./index.html",
@@ -25,6 +25,8 @@ const ASSETS = [
   "./public/Assets/shared_items/salmon.png",
   "./public/Assets/shared_items/cabbage.png",
   "./public/Assets/shared_items/bread.png",
+  "./public/Assets/shared_items/eyemask.png",
+  "./public/Assets/shared_items/Cucumber.png",
   "./public/Assets/avatar_image/avatar_01.png",
   "./public/Assets/avatar_image/avatar_02.png",
   "./public/Assets/avatar_image/avatar_03.png",
