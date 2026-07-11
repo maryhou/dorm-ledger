@@ -13,7 +13,7 @@ const PALETTE = [
   ["#E8F6EA", "#6AAE72"], // mint
 ];
 
-const ITEM_EMOJIS = ["🥚","🧻","🧴","🧼","🧃","🥛","🍜","☕","🍞","🧀","🍚","🧂","🫧","🧊","🍌","🍫","🧺","💊","🔋","🗑️","public/Assets/shared_items/popsicle.png","public/Assets/shared_items/coffeebean.png","public/Assets/shared_items/teabag.png","public/Assets/shared_items/tissue.png","public/Assets/shared_items/tea.png","public/Assets/shared_items/lemon.png","public/Assets/shared_items/butter.png","public/Assets/shared_items/salmon.png","public/Assets/shared_items/cabbage.png","public/Assets/shared_items/bread.png"];
+const ITEM_EMOJIS = ["🥚","🧻","🧴","🧼","🧃","🥛","🍜","☕","🍞","🧀","🍚","🧂","🫧","🧊","🍌","🍫","🧺","💊","🔋","🗑️","public/Assets/shared_items/popsicle.png","public/Assets/shared_items/coffeebean.png","public/Assets/shared_items/teabag.png","public/Assets/shared_items/tissue.png","public/Assets/shared_items/tea.png","public/Assets/shared_items/lemon.png","public/Assets/shared_items/butter.png","public/Assets/shared_items/salmon.png","public/Assets/shared_items/cabbage.png","public/Assets/shared_items/bread.png","public/Assets/shared_items/eyemask.png","public/Assets/shared_items/Cucumber.png"];
 const MEMBER_EMOJIS = ["🐣","🐰","🐱","🐻","🦊","🐸","🐼","🦄","🐯","🐨","🐷","🦉"];
 const MEMBER_AVATARS = Array.from({ length: 8 }, (_, i) =>
   `public/Assets/avatar_image/avatar_0${i + 1}.png`);
