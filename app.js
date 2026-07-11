@@ -15,6 +15,8 @@ const PALETTE = [
 
 const ITEM_EMOJIS = ["🥚","🧻","🧴","🧼","🧃","🥛","🍜","☕","🍞","🧀","🍚","🧂","🫧","🧊","🍌","🍫","🧺","💊","🔋","🗑️","public/Assets/shared_items/popsicle.png","public/Assets/shared_items/coffeebean.png","public/Assets/shared_items/teabag.png","public/Assets/shared_items/tissue.png","public/Assets/shared_items/tea.png","public/Assets/shared_items/lemon.png","public/Assets/shared_items/butter.png","public/Assets/shared_items/salmon.png","public/Assets/shared_items/cabbage.png","public/Assets/shared_items/bread.png"];
 const MEMBER_EMOJIS = ["🐣","🐰","🐱","🐻","🦊","🐸","🐼","🦄","🐯","🐨","🐷","🦉"];
+const MEMBER_AVATARS = Array.from({ length: 8 }, (_, i) =>
+  `public/Assets/avatar_image/avatar_0${i + 1}.png`);
 
 /* outline icons（與 tab bar 同一套 stroke 風格） */
 const ICONS = {
@@ -22,6 +24,7 @@ const ICONS = {
   trash: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v5.5M14 11v5.5"/></svg>`,
   pencil: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3zM15 5l4 4"/></svg>`,
   coin: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.3c-.5-.9-1.5-1.4-2.8-1.4-1.7 0-2.9.9-2.9 2.1 0 2.9 5.8 1.2 5.8 4.1 0 1.2-1.2 2.1-2.9 2.1-1.3 0-2.3-.5-2.8-1.4M12 6.2v11.6"/></svg>`,
+  chev: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>`,
 };
 
 let db = load();
@@ -100,6 +103,8 @@ function render() {
   badge.hidden = total <= 0;
   badge.textContent = `未結 ${fmt$(total)}`;
   $("#subGreeting").textContent = subGreeting(total);
+  $("#appTitle").textContent = db.title || "宿舍小帳本";
+  document.title = `${db.title || "宿舍小帳本"} · Dorm Ledger`;
 
   if (tab === "home") renderHome();
   else if (tab === "logs") renderLogs();
@@ -115,7 +120,10 @@ function subGreeting(total) {
 }
 
 function avatarHTML(m, size = "") {
-  return `<span class="avatar ${size}" style="background:${m.color[0]}">${esc(m.emoji)}</span>`;
+  const face = String(m.emoji).includes("/")
+    ? `<img class="avatar-img" src="${m.emoji}" alt="">`
+    : esc(m.emoji);
+  return `<span class="avatar ${size}" style="background:${m.color[0]}">${face}</span>`;
 }
 
 /* 物品圖示：emoji 或圖片路徑（含 "/" 視為圖片） */
@@ -294,13 +302,13 @@ function renderMembers() {
     const stat = v > 0 ? `可收 ${fmt$(v)}` : v < 0 ? `要付 ${fmt$(-v)}` : "帳目乾淨";
     const bought = db.items.filter((i) => i.buyerId === m.id).length;
     return `
-      <div class="member-row">
+      <div class="member-row" onclick="sheetEditMember('${m.id}')">
         ${avatarHTML(m, "lg")}
         <div style="flex:1">
           <div class="member-name">${esc(m.name)}</div>
           <div class="member-stat">買過 ${bought} 樣 · ${stat}</div>
         </div>
-        <button class="log-del" onclick="delMember('${m.id}')">✕</button>
+        <button class="log-del" onclick="event.stopPropagation();delMember('${m.id}')">✕</button>
       </div>`;
   }).join("");
 
@@ -309,8 +317,26 @@ function renderMembers() {
     ${rows || ""}
     <div style="height:8px"></div>
     <button class="btn btn-grad" onclick="sheetAddMember()">＋ 加入室友</button>
-    <div style="height:10px"></div>
-    <button class="btn btn-ghost" onclick="resetAll()">清空全部資料</button>`;
+    <div style="height:18px"></div>
+    <div class="section-title">管理</div>
+    <div class="settings-card">
+      <button class="settings-row" onclick="sheetRenameLedger()">${ICONS.pencil} 幫帳本改名 ${ICONS.chev}</button>
+      <button class="settings-row danger" onclick="resetAll()">${ICONS.trash} 清空全部資料 ${ICONS.chev}</button>
+    </div>`;
+}
+
+function sheetRenameLedger() {
+  openSheet(`
+    <h2>幫帳本改個名</h2>
+    <p class="sheet-sub">會顯示在最上面的大標題</p>
+    <div class="field"><label>帳本名稱</label><input id="fLedgerName" class="input" maxlength="12" value="${esc(db.title || "宿舍小帳本")}" placeholder="宿舍小帳本"></div>
+    <button class="btn btn-grad" onclick="renameLedger()">改好了 ${ICONS.pencil}</button>`);
+}
+
+function renameLedger() {
+  const name = $("#fLedgerName").value.trim() || "宿舍小帳本";
+  db.title = name; save(); closeSheet(); render();
+  toast(`帳本現在叫「${name}」！`);
 }
 
 /* ---------- Sheets ---------- */
@@ -324,16 +350,64 @@ function openSheet(html) {
 function closeSheet() { sheetRoot.innerHTML = ""; }
 
 /* ----- Add member ----- */
+function avatarPickerHTML(selected = "🐣") {
+  const isHuman = String(selected).includes("/");
+  const animals = MEMBER_EMOJIS.map((e) =>
+    `<button class="emoji-opt ${e === selected ? "sel" : ""}" data-emoji="${e}" onclick="pickAvatar(this)">${e}</button>`).join("");
+  const humans = MEMBER_AVATARS.map((p) =>
+    `<button class="emoji-opt ${p === selected ? "sel" : ""}" data-emoji="${p}" onclick="pickAvatar(this)"><img class="avatar-img" src="${p}" alt=""></button>`).join("");
+  return `
+    <div class="avatar-tabs">
+      <button class="avatar-tab ${isHuman ? "" : "sel"}" onclick="switchAvatarTab(this,'animal')">動物頭像</button>
+      <button class="avatar-tab ${isHuman ? "sel" : ""}" onclick="switchAvatarTab(this,'human')">人物頭像</button>
+    </div>
+    <div id="fMemberEmoji">
+      <div class="emoji-row" data-group="animal" ${isHuman ? "hidden" : ""}>${animals}</div>
+      <div class="emoji-row" data-group="human" ${isHuman ? "" : "hidden"}>${humans}</div>
+    </div>`;
+}
+
 function sheetAddMember() {
-  const emojis = MEMBER_EMOJIS.map((e, i) =>
-    `<button class="emoji-opt ${i === 0 ? "sel" : ""}" data-emoji="${e}" onclick="pickEmoji(this)">${e}</button>`).join("");
   openSheet(`
     <h2>加入室友 🎉</h2>
-    <p class="sheet-sub">取個好認的名字，選一隻代表動物</p>
+    <p class="sheet-sub">取個好認的名字，選一個代表頭像</p>
     <div class="field"><label>名字</label><input id="fMemberName" class="input" placeholder="例如：小美" maxlength="10"></div>
-    <div class="field"><label>頭像</label><div class="emoji-row" id="fMemberEmoji">${emojis}</div></div>
+    <div class="field"><label>頭像</label>${avatarPickerHTML()}</div>
     <button class="btn btn-grad" onclick="addMember()">加入</button>`);
   setTimeout(() => $("#fMemberName").focus(), 150);
+}
+
+function sheetEditMember(memberId) {
+  const m = db.members.find((x) => x.id === memberId);
+  if (!m) return;
+  openSheet(`
+    <h2>編輯室友</h2>
+    <p class="sheet-sub">改名字、換頭像都可以</p>
+    <div class="field"><label>名字</label><input id="fMemberName" class="input" maxlength="10" value="${esc(m.name)}"></div>
+    <div class="field"><label>頭像</label>${avatarPickerHTML(m.emoji)}</div>
+    <button class="btn btn-grad" onclick="saveMember('${m.id}')">改好了 ${ICONS.pencil}</button>`);
+}
+
+function saveMember(memberId) {
+  const m = db.members.find((x) => x.id === memberId);
+  if (!m) return;
+  const name = $("#fMemberName").value.trim();
+  if (!name) { toast("名字不能空白喔 ✍️"); return; }
+  m.name = name;
+  m.emoji = $("#fMemberEmoji .sel")?.dataset.emoji || m.emoji;
+  save(); closeSheet(); render();
+  toast(`${itemIconText(m.emoji)}${m.name} 更新完成！`);
+}
+
+function switchAvatarTab(btn, group) {
+  sheetRoot.querySelectorAll(".avatar-tab").forEach((b) => b.classList.remove("sel"));
+  btn.classList.add("sel");
+  sheetRoot.querySelectorAll("#fMemberEmoji .emoji-row").forEach((r) => { r.hidden = r.dataset.group !== group; });
+}
+
+function pickAvatar(btn) {
+  sheetRoot.querySelectorAll("#fMemberEmoji .emoji-opt").forEach((b) => b.classList.remove("sel"));
+  btn.classList.add("sel");
 }
 
 function pickEmoji(btn) {
@@ -347,7 +421,7 @@ function addMember() {
   const emoji = $("#fMemberEmoji .sel")?.dataset.emoji || "🐣";
   db.members.push({ id: uid(), name, emoji, color: PALETTE[db.members.length % PALETTE.length] });
   save(); closeSheet(); render();
-  toast(`${emoji} ${name} 搬進來了！`);
+  toast(`${itemIconText(emoji)}${name} 搬進來了！`);
 }
 
 function delMember(id) {
@@ -358,7 +432,7 @@ function delMember(id) {
   if (!confirm(`確定讓 ${m.name} 搬走嗎？`)) return;
   db.members = db.members.filter((x) => x.id !== id);
   save(); render();
-  toast(`${m.emoji} ${m.name} 搬走了，一路順風`);
+  toast(`${itemIconText(m.emoji)}${m.name} 搬走了，一路順風`);
 }
 
 /* ----- Add item ----- */
@@ -448,7 +522,7 @@ function sheetUseItem(itemId) {
   }).join("");
 
   openSheet(`
-    <h2>${itemIcon(it.emoji)} ${esc(it.name)}</h2>
+    <h2><button class="icon-swap" onclick="sheetChangeIcon('${it.id}')" aria-label="更換圖示">${itemIcon(it.emoji)}</button> ${esc(it.name)}</h2>
     <p class="sheet-sub">1 個 ${fmt$(it.price)} · 還剩 ${left} 個 · ${esc(member(it.buyerId).name)} 買的</p>
     ${left > 0 ? `
       <div class="stepper">
@@ -463,6 +537,28 @@ function sheetUseItem(itemId) {
       <button onclick="sheetRestock('${it.id}')">${ICONS.box} 補貨</button>
       <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除物品</button>
     </div>`);
+}
+
+/* 使用面板點圖示 → 換圖示 */
+function sheetChangeIcon(itemId) {
+  const it = db.items.find((i) => i.id === itemId);
+  if (!it) return;
+  const opts = ITEM_EMOJIS.map((e) =>
+    `<button class="emoji-opt ${e === it.emoji ? "sel" : ""}" data-emoji="${e}" onclick="changeIcon('${itemId}', this)">${itemIcon(e)}</button>`).join("");
+  openSheet(`
+    <h2>換個圖示</h2>
+    <p class="sheet-sub">幫「${esc(it.name)}」挑一個新造型</p>
+    <div class="emoji-row">${opts}</div>`);
+  sheetRoot.querySelector(".emoji-opt.sel")?.scrollIntoView({ inline: "center", block: "nearest" });
+}
+
+function changeIcon(itemId, btn) {
+  const it = db.items.find((i) => i.id === itemId);
+  if (!it) return;
+  it.emoji = btn.dataset.emoji;
+  save(); render();
+  sheetUseItem(itemId);
+  toast(`${itemIconText(it.emoji)}${it.name} 換上新圖示！`);
 }
 
 function stepUse(d) {
@@ -481,8 +577,8 @@ function useItem(itemId, memberId) {
   const m = member(memberId);
   const self = memberId === it.buyerId;
   toast(self
-    ? `${m.emoji} ${m.name} 用了自己的 ${it.name} ×${count} 😎`
-    : `${m.emoji} ${m.name} 用了 ${it.name} ×${count}，記 ${fmt$(count * it.price)} ✏️`);
+    ? `${itemIconText(m.emoji)}${m.name} 用了自己的 ${it.name} ×${count} 😎`
+    : `${itemIconText(m.emoji)}${m.name} 用了 ${it.name} ×${count}，記 ${fmt$(count * it.price)} ✏️`);
 }
 
 function undoUse(ev, itemId, memberId) {
@@ -681,8 +777,11 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet
 /* expose for inline handlers */
 Object.assign(window, {
   sheetAddMember, addMember, delMember, pickEmoji, pickChip,
+  switchAvatarTab, pickAvatar, sheetEditMember, saveMember,
+  sheetRenameLedger, renameLedger,
   sheetAddItem, applyPreset, addItem,
   sheetUseItem, stepUse, useItem, undoUse, delLog,
+  sheetChangeIcon, changeIcon,
   sheetRestock, restock, toggleRestockReset, delItem,
   sheetConfirmSettle, doSettle, resetAll, loadDemo, closeSheet,
 });

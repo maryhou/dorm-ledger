@@ -344,6 +344,9 @@ input, select {
   box-shadow: var(--shadow);
   padding: 12px 14px;
   margin-bottom: 10px;
+  cursor: pointer;
+}
+.member-row:active { transform: scale(0.98);
 }
 .member-name { font-weight: 800; font-size: 16px; flex: 1; }
 .member-stat { color: var(--muted); font-size: 12px; }
@@ -515,6 +518,7 @@ input, select {
   scrollbar-width: none;
 }
 .emoji-row::-webkit-scrollbar { display: none; }
+.emoji-row[hidden] { display: none; } /* display:grid 會蓋掉 hidden 的 UA 樣式，明確補回 */
 
 .emoji-opt {
   flex: none;
@@ -527,7 +531,11 @@ input, select {
   place-items: center;
   border: 2px solid transparent;
 }
-.emoji-opt.sel { border-color: var(--ink); background: var(--lime-soft); }
+/* 選取框走主漸層：內層底色 padding-box、漸層鋪 border-box，透明 border 露出漸層 */
+.emoji-opt.sel {
+  border-color: transparent;
+  background: linear-gradient(var(--lime-soft), var(--lime-soft)) padding-box, var(--grad) border-box;
+}
 
 /* 圖片版物品圖示：跟著所在文字的字級走，對齊 emoji 基線 */
 .icon-img {
@@ -550,7 +558,10 @@ input, select {
   font-weight: 700;
   font-size: 14px;
 }
-.chip.sel { border-color: var(--ink); background: var(--lime-soft); }
+.chip.sel {
+  border-color: transparent;
+  background: linear-gradient(var(--lime-soft), var(--lime-soft)) padding-box, var(--grad) border-box;
+}
 .chip:disabled { opacity: 0.4; }
 
 .check-row {
@@ -579,6 +590,59 @@ input, select {
   font-size: 13.5px;
   font-weight: 700;
 }
+
+/* 頭像分頁（動物/人物）＋圖片頭像 */
+.avatar-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.avatar-tab {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.avatar-tab.sel {
+  color: var(--ink);
+  border-color: transparent;
+  background: linear-gradient(var(--lime-soft), var(--lime-soft)) padding-box, var(--grad) border-box;
+}
+.avatar .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.emoji-opt .avatar-img { width: 33px; height: 33px; object-fit: cover; border-radius: 999px; }
+
+/* 使用面板標題的圖示鈕：淡底小方塊示意可點，點了換圖示 */
+.sheet h2 .icon-swap {
+  font: inherit;
+  padding: 3px 8px;
+  margin-left: -4px;
+  border-radius: 12px;
+  background: var(--bg);
+}
+.sheet h2 .icon-swap:active { transform: scale(0.9); }
+
+/* 室友頁「管理」settings 卡：一列一個動作，左 icon 右 chevron */
+.settings-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+}
+.settings-row:active { background: var(--bg); }
+.settings-row + .settings-row { border-top: 1px solid var(--line); }
+.settings-row .icon-line { width: 19px; height: 19px; }
+.settings-row .icon-line:last-child { margin-left: auto; width: 16px; height: 16px; color: var(--muted); }
+.settings-row.danger { color: var(--red); }
 
 /* member pick grid in "who used it" sheet */
 .pick-grid {

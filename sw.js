@@ -1,5 +1,5 @@
 /* 宿舍小帳本 service worker — cache-first, offline-ready */
-const CACHE = "dorm-ledger-v9";
+const CACHE = "dorm-ledger-v10";
 const ASSETS = [
   "./",
   "./index.html",
@@ -25,6 +25,14 @@ const ASSETS = [
   "./public/Assets/shared_items/salmon.png",
   "./public/Assets/shared_items/cabbage.png",
   "./public/Assets/shared_items/bread.png",
+  "./public/Assets/avatar_image/avatar_01.png",
+  "./public/Assets/avatar_image/avatar_02.png",
+  "./public/Assets/avatar_image/avatar_03.png",
+  "./public/Assets/avatar_image/avatar_04.png",
+  "./public/Assets/avatar_image/avatar_05.png",
+  "./public/Assets/avatar_image/avatar_06.png",
+  "./public/Assets/avatar_image/avatar_07.png",
+  "./public/Assets/avatar_image/avatar_08.png",
 ];
 
 self.addEventListener("install", (e) => {
