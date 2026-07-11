@@ -13,7 +13,7 @@ const PALETTE = [
   ["#E8F6EA", "#6AAE72"], // mint
 ];
 
-const ITEM_EMOJIS = ["🥚","🧻","🧴","🧼","🧃","🥛","🍜","☕","🍞","🧀","🍚","🧂","🫧","🧊","🍌","🍫","🧺","💊","🔋","🗑️"];
+const ITEM_EMOJIS = ["🥚","🧻","🧴","🧼","🧃","🥛","🍜","☕","🍞","🧀","🍚","🧂","🫧","🧊","🍌","🍫","🧺","💊","🔋","🗑️","public/Assets/shared_items/popsicle.png","public/Assets/shared_items/coffeebean.png","public/Assets/shared_items/teabag.png","public/Assets/shared_items/tissue.png","public/Assets/shared_items/tea.png","public/Assets/shared_items/lemon.png","public/Assets/shared_items/butter.png","public/Assets/shared_items/salmon.png","public/Assets/shared_items/cabbage.png","public/Assets/shared_items/bread.png"];
 const MEMBER_EMOJIS = ["🐣","🐰","🐱","🐻","🦊","🐸","🐼","🦄","🐯","🐨","🐷","🦉"];
 
 /* outline icons（與 tab bar 同一套 stroke 風格） */
@@ -109,7 +109,7 @@ function render() {
 
 function subGreeting(total) {
   if (db.members.length === 0) return "先把室友加進來吧 👇";
-  if (total === 0) return "帳目乾乾淨淨，感情好好 💚";
+  if (total === 0) return "帳目乾乾淨淨，感情好好";
   if (total < 100) return "小錢小錢，月底一起算 ✨";
   return "累積中…月底一次結清";
 }
@@ -118,12 +118,20 @@ function avatarHTML(m, size = "") {
   return `<span class="avatar ${size}" style="background:${m.color[0]}">${esc(m.emoji)}</span>`;
 }
 
+/* 物品圖示：emoji 或圖片路徑（含 "/" 視為圖片） */
+function itemIcon(e) {
+  return e.includes("/") ? `<img class="icon-img" src="${e}" alt="">` : esc(e);
+}
+function itemIconText(e) {
+  return e.includes("/") ? "" : e + " "; // toast 純文字用，圖片圖示直接省略
+}
+
 /* ----- Home: items ----- */
 function renderHome() {
   if (db.members.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <img class="empty-gif" src="public/Assets/Home_empty.jpg" alt="" width="200" height="200">
+        <img class="empty-gif" src="public/Assets/welcome.jpg" alt="" width="200" height="200">
         <h3>歡迎搬進來！</h3>
         <p>先加入室友，再開始記東西。<br>誰買的、誰用的，通通記得清清楚楚。</p>
         <button class="btn btn-grad" onclick="sheetAddMember()">加入第一位室友</button>
@@ -135,7 +143,7 @@ function renderHome() {
   if (db.items.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <span class="big">🧺</span>
+        <img class="empty-gif" src="public/Assets/groceries.jpg" alt="" width="200" height="200">
         <h3>還沒有共用物品</h3>
         <p>買了一盒蛋？一串衛生紙？<br>按下方 ＋ 記上去，誰用誰付錢。</p>
         <button class="btn btn-grad" onclick="sheetAddItem()">新增第一個物品</button>
@@ -152,7 +160,7 @@ function renderHome() {
     const out = left === 0;
     return `
       <button class="item-card ${out ? "is-empty" : ""}" onclick="sheetUseItem('${it.id}')">
-        <span class="item-emoji" style="background:${color[0]}">${esc(it.emoji)}</span>
+        <span class="item-emoji" style="background:${color[0]}">${itemIcon(it.emoji)}</span>
         <span class="item-plus">＋</span>
         ${out ? '<span class="badge-out">用完啦</span>' : ""}
         <span class="item-name">${esc(it.name)}</span>
@@ -179,7 +187,7 @@ function renderLogs() {
   if (logs.length === 0) {
     view.innerHTML = `
       <div class="card empty">
-        <img class="empty-gif" src="public/Assets/Record_empty.jpg" alt="" width="200" height="200">
+        <img class="empty-gif" src="public/Assets/empty.jpg" alt="" width="200" height="200">
         <h3>還沒有使用紀錄</h3>
         <p>回到「物品」頁，用了什麼點一下 +1，<br>這裡就會幫大家記著。</p>
       </div>`;
@@ -203,7 +211,7 @@ function renderLogs() {
       <div class="log-row ${l.settledId ? "settled" : ""}">
         ${avatarHTML(m)}
         <div class="log-text">
-          <b>${esc(m.name)}</b> 用了 ${esc(item ? item.emoji + " " + item.name : "（已刪除）")} ×${l.count}
+          <b>${esc(m.name)}</b> 用了 ${item ? `${itemIcon(item.emoji)} ${esc(item.name)}` : "（已刪除）"} ×${l.count}
           <small>${self ? "自己買的，不用付 😎" : `要給 ${esc(b.name)}`}${l.settledId ? " · ✓ 已結清" : ""}</small>
         </div>
         <span class="log-amt ${self ? "zero" : ""}">${self ? "—" : fmt$(amt)}</span>
@@ -355,24 +363,26 @@ function delMember(id) {
 
 /* ----- Add item ----- */
 const PRESETS = [
-  { name: "蛋", emoji: "🥚", price: 15 },
+  { name: "蛋", emoji: "🥚", price: 10 },
   { name: "衛生紙", emoji: "🧻", price: 20 },
   { name: "洗衣精", emoji: "🫧", price: 10 },
   { name: "泡麵", emoji: "🍜", price: 45 },
   { name: "鮮奶", emoji: "🥛", price: 30 },
-  { name: "咖啡", emoji: "☕", price: 25 },
+  { name: "咖啡", emoji: "☕", price: 45 },
+  { name: "咖啡豆", emoji: "public/Assets/shared_items/coffeebean.png", price: 15 },
+  { name: "冰棒", emoji: "public/Assets/shared_items/popsicle.png", price: 20 },
 ];
 
 function sheetAddItem() {
   if (db.members.length === 0) { sheetAddMember(); return; }
   const emojis = ITEM_EMOJIS.map((e, i) =>
-    `<button class="emoji-opt ${i === 0 ? "sel" : ""}" data-emoji="${e}" onclick="pickEmoji(this)">${e}</button>`).join("");
+    `<button class="emoji-opt ${i === 0 ? "sel" : ""}" data-emoji="${e}" onclick="pickEmoji(this)">${itemIcon(e)}</button>`).join("");
   const presets = PRESETS.map((p) =>
-    `<button class="preset" onclick="applyPreset('${p.emoji}','${p.name}',${p.price})">${p.emoji} ${p.name}</button>`).join("");
+    `<button class="preset" onclick="applyPreset('${p.emoji}','${p.name}',${p.price})">${itemIcon(p.emoji)} ${p.name}</button>`).join("");
   const buyers = db.members.map((m, i) =>
     `<button class="chip ${i === 0 ? "sel" : ""}" data-id="${m.id}" onclick="pickChip(this)">${avatarHTML(m, "sm")} ${esc(m.name)}</button>`).join("");
   openSheet(`
-    <h2>新增共用物品 🛒</h2>
+    <h2>新增共用物品</h2>
     <p class="sheet-sub">快速套用，或自己填</p>
     <div class="preset-row">${presets}</div>
     <div class="field"><label>圖示</label><div class="emoji-row" id="fItemEmoji">${emojis}</div></div>
@@ -389,7 +399,10 @@ function applyPreset(emoji, name, price) {
   $("#fItemName").value = name;
   $("#fItemPrice").value = price;
   const opt = $(`#fItemEmoji .emoji-opt[data-emoji="${emoji}"]`);
-  if (opt) pickEmoji(opt);
+  if (opt) {
+    pickEmoji(opt);
+    opt.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }
 }
 
 function pickChip(btn) {
@@ -408,7 +421,7 @@ function addItem() {
   const emoji = $("#fItemEmoji .sel")?.dataset.emoji || "🧺";
   db.items.push({ id: uid(), name, emoji, price, stock, buyerId, createdAt: Date.now() });
   save(); closeSheet(); tab = "home"; render();
-  toast(`${emoji} ${name} ×${stock} 上架！`);
+  toast(`${itemIconText(emoji)}${name} ×${stock} 上架！`);
 }
 
 /* ----- Use item (+1) ----- */
@@ -435,7 +448,7 @@ function sheetUseItem(itemId) {
   }).join("");
 
   openSheet(`
-    <h2>${esc(it.emoji)} ${esc(it.name)}</h2>
+    <h2>${itemIcon(it.emoji)} ${esc(it.name)}</h2>
     <p class="sheet-sub">1 個 ${fmt$(it.price)} · 還剩 ${left} 個 · ${esc(member(it.buyerId).name)} 買的</p>
     ${left > 0 ? `
       <div class="stepper">
@@ -445,7 +458,7 @@ function sheetUseItem(itemId) {
       </div>
       <p class="sheet-sub" style="text-align:center;margin-top:-8px">先按 ＋− 調好用了幾個，再點頭像記到他帳上 👇</p>
       <div class="pick-grid">${members}</div>`
-      : `<div class="empty" style="padding:18px"><img class="empty-gif" src="public/Assets/Happy.jpg" alt="" width="200" height="200"><p>用完啦！要再買記得補貨</p></div>`}
+      : `<div class="empty" style="padding:18px"><img class="empty-gif" src="public/Assets/outofstock.gif" alt="" width="200" height="200"><p>用完啦！要再買記得補貨</p></div>`}
     <div class="sheet-links">
       <button onclick="sheetRestock('${it.id}')">${ICONS.box} 補貨</button>
       <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除物品</button>
@@ -506,7 +519,7 @@ function sheetRestock(itemId) {
   const buyers = db.members.map((m) =>
     `<button class="chip ${m.id === it.buyerId ? "sel" : ""}" data-id="${m.id}" ${locked && m.id !== it.buyerId ? "disabled" : ""} onclick="pickChip(this)">${avatarHTML(m, "sm")} ${esc(m.name)}</button>`).join("");
   openSheet(`
-    <h2>補貨 ${esc(it.emoji)} ${esc(it.name)}</h2>
+    <h2>補貨 ${itemIcon(it.emoji)} ${esc(it.name)}</h2>
     <p class="sheet-sub">${locked
       ? `還剩 ${left} 個沒用完，照原價由 ${esc(member(it.buyerId).name)} 補；想換人或改價，勾下面「重新開一批」`
       : "之前的使用紀錄照舊，新的價錢從現在開始算"}</p>
@@ -548,7 +561,7 @@ function restock(itemId) {
   it.price = p;
   it.buyerId = buyerId || it.buyerId;
   save(); closeSheet(); render();
-  toast(reset ? `${it.emoji} ${it.name} 重新開一批，這次 ${n} 個！` : `${it.emoji} ${it.name} 補了 ${n} 個！`);
+  toast(reset ? `${itemIconText(it.emoji)}${it.name} 重新開一批，這次 ${n} 個！` : `${itemIconText(it.emoji)}${it.name} 補了 ${n} 個！`);
 }
 
 function delItem(itemId) {
@@ -560,7 +573,7 @@ function delItem(itemId) {
   db.items = db.items.filter((i) => i.id !== itemId);
   db.logs = db.logs.filter((l) => l.itemId !== itemId || l.settledId);
   save(); closeSheet(); render();
-  toast(`${it.emoji} ${it.name} 已下架`);
+  toast(`${itemIconText(it.emoji)}${it.name} 已下架`);
 }
 
 /* ----- Settle ----- */

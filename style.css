@@ -505,7 +505,10 @@ input, select {
 .field-row .field { flex: 1; }
 
 .emoji-row {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-columns: min-content;
   gap: 8px;
   overflow-x: auto;
   padding: 2px;
@@ -525,6 +528,14 @@ input, select {
   border: 2px solid transparent;
 }
 .emoji-opt.sel { border-color: var(--ink); background: var(--lime-soft); }
+
+/* 圖片版物品圖示：跟著所在文字的字級走，對齊 emoji 基線 */
+.icon-img {
+  width: 1.15em;
+  height: 1.15em;
+  object-fit: contain;
+  vertical-align: -0.18em;
+}
 
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
