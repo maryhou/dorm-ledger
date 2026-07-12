@@ -1,5 +1,5 @@
 /* 宿舍小帳本 service worker — cache-first, offline-ready */
-const CACHE = "dorm-ledger-v11";
+const CACHE = "dorm-ledger-v12";
 const ASSETS = [
   "./",
   "./index.html",
