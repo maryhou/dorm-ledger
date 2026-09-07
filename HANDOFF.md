@@ -1,6 +1,6 @@
 # HANDOFF — 宿舍小帳本 Dorm Ledger
 
-> 給下一個 session / 接手者的交接文件。最後更新：2026-07-12（換新 app icon）。
+> 給下一個 session / 接手者的交接文件。最後更新：2026-09-07（v1.6：物品編輯／排序／釘選／手動拖曳排序）。
 
 ## 專案是什麼
 
@@ -8,7 +8,7 @@
 
 UI 走粉彩、大圓角、高趣味風格（動物頭像室友、emoji 物品、俏皮文案），全繁體中文。
 
-## 目前狀態：v1.5 已上線 ✅（編輯功能大補完：帳本改名、換物品圖示、人物頭像、室友編輯）
+## 目前狀態：v1.6 已上線 ✅（物品編輯／排序／釘選／手動拖曳排序；圓角收斂）
 
 - **線上網址**：https://maryhou.github.io/dorm-ledger/（GitHub Pages，legacy build，main branch 根目錄；push 即自動部署，約 1 分鐘＋最多 10 分鐘 CDN 快取）
 - **Repo**：https://github.com/maryhou/dorm-ledger（公開——使用者已確認公開沒關係；`gh` CLI 已登入帳號 maryhou）
@@ -82,6 +82,17 @@ UI 走粉彩、大圓角、高趣味風格（動物頭像室友、emoji 物品�
 9. sw.js `CACHE` v9→v10，`ASSETS` 加 8 張人物頭像
 10. **v1.5.1 補丁（上線後修）**：人物頭像沒垂直置中＋髮髻改為探出圓外。原圖 400×420、內建圓形在 (9,20)–(389,400) 直徑 380（8 張同模板，用 canvas 掃像素量的）。做法：`.avatar` 加 `position:relative`，`.avatar-img` 絕對定位、尺寸 105.26%×110.53%、偏移 left -2.37% / top -5.26%，讓內建圓對齊頭像框、**不裁切**——髮髻自然溢出圓外（趣味點，使用者指定要的）。⚠️ 兩個坑：(a) grid auto 軌道裡 `height:100%` 解析不出來會退回等比高度（這就是原本沒置中的原因）；(b) 之後如果新頭像圖不是同一個模板尺寸，這組百分比要重量。選擇器裡的縮圖同理（`.emoji-opt .avatar-img` 35×36.75px）
 
+### 2026-09-07（v1.6）：物品編輯／排序／釘選／手動拖曳排序（都是使用者逐項點名要的）
+
+全部集中在物品頁與使用面板，資料模型加了三個可有可無的欄位（舊資料不存在也能跑）：`items[].pinned`（釘選）、`db.itemSort`（排序模式，預設 `"manual"`）；物品的自訂順序 = `db.items` 陣列順序本身。
+
+1. **編輯物品**：使用面板底部 sheet-links 從「補貨／刪除」變三顆「編輯／補貨／刪除」，編輯開 `sheetEditItem`／`saveItem`，可改 圖示／名稱／單價／買了幾個／誰買的。防呆同新增（名稱不空、單價>0、數量≥1）**外加「數量不能低於已用掉的量」**（`stock >= itemUsed`）。⚠️ 走全站快照慣例：**只改 item 現值，已記過的 log 照當初 price/buyerId 快照算**；有未結帳款時 sheet 會用 `.sheet-note`（peach 底）提醒這件事。跟 `restock` 的差別：restock 是「又買了」所以有剩貨時鎖同買家同單價；edit 是「打錯了」所以直接改，不鎖。
+2. **排序**：物品頁標題下一排 `.sort-chip`（自訂／名稱／剩最少／最新），`ITEM_SORTS` 常數＋`setSort()`。排序邏輯集中在 `sortedItems()`：**釘選一律浮最上**，釘選/未釘選兩群組內再套用選定排序（`manual` 用 `db.items` 原始 index 當穩定 fallback）。`renderHome` 改用 `sortedItems()`。只有 >1 個物品才顯示排序列。
+3. **釘選**：物品卡名稱**左邊**的 `.item-pin` 小鈕（`togglePin`，`event.stopPropagation` 防誤開使用面板）。未釘＝淡灰線條圖釘（opacity .4）；**釘選＝實心橘色圖釘本身、無圓底**（`.item-pin.on` 設 `color:var(--lime)`＋`.icon-line{fill:currentColor}`，靠 CSS fill 蓋過 svg inline 的 `fill="none"`）。`ICONS.pin` 新增。
+4. **手動拖曳排序**：標題右邊「⠿ 整理順序」（`.title-action`，>1 物品時取代「點一下=用掉一個」提示）→ `sheetReorder` 開直式清單，每列右邊 `.reorder-handle`（`ICONS.grip` 六點把手）。拖曳用 **Pointer Events 自製**（`initReorderDrag`）：pointerdown 在把手→建 `.reorder-ph` placeholder、把該列 `position:fixed` 跟著指標跑；pointermove 比對其他列中線插 placeholder；pointerup 換回原位、依 DOM 順序寫回 `db.items` 並 `db.itemSort="manual"`。把手 `touch-action:none` 讓觸控抓把手時不捲動 sheet；`setPointerCapture` 包 try/catch（合成事件會丟例外，也順便防禦）。清單以「釘選優先＋現有自訂順序」呈現，跟自訂模式一致；跨釘選邊界拖曳時 home 會把釘選的再浮回頂（軟規則，有文字提示）。
+5. **圓角收斂**（使用者逐項點選元素要小的）：`.item-card` 24→18、`.item-emoji` 18→14、`.pick-member` 20→14、`.sheet h2 .icon-swap` 12→10。其他頁卡片維持 `--radius` 24。
+6. sw.js `CACHE` v12→v13（ASSETS 清單沒變，只是 app.js/style.css 內容變了；network-first 本來就會抓新的，升版是確保舊快取被清）。
+
 ### 2026-07-12：換新 app icon（微笑蛋）
 
 - 使用者自備新圖示放進 `icons/`（icon.svg + 192/512 png，尺寸已驗證正確）
@@ -133,7 +144,7 @@ settlements: [{id, ts, label, transfers:[{from,to,amount}], total, logCount}]
 
 1. **（等使用者）手機實測**：使用者要在宿舍公用裝置瀏覽器開網址→加入主畫面，實際用一兩週。目前的 blocking 步驟，程式端沒事可做。
 2. **多人同步（候選，尚未決定）**：目前單機 localStorage。若實測後想各自手機記帳，加 Supabase＋帳本共享。**等使用者回饋再動工。** 屆時注意：anon key 可進公開 repo（靠 RLS 保護），其他金鑰不行。
-3. 小改進候選（未承諾）：bottom sheet 也做毛玻璃、結清前匯出/備份 JSON、編輯物品名稱與 emoji、結算歷史點開看明細、步進器是否簡化（使用者曾問兩個 − 的差異，可考慮藏掉步進器預設記 1）。
+3. 小改進候選（未承諾）：bottom sheet 也做毛玻璃、結清前匯出/備份 JSON、結算歷史點開看明細、步進器是否簡化（使用者曾問兩個 − 的差異，可考慮藏掉步進器預設記 1）。（編輯物品名稱與 emoji 已於 v1.6 完成）
 4. 素材相關收尾：目前 `public/Assets/` 裡的檔案全部有被引用（使用者已自己清掉沒用到的）。圖片未壓縮，數量變多了（24 個檔案），之後可考慮壓一版。
 5. 小 UI 候選（未承諾）：新增物品面板的名稱 placeholder「例如：蛋」和單價 placeholder「15」沒跟著 preset 價格調整，只是提示文字，要不要改看使用者。
 

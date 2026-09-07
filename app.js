@@ -25,7 +25,17 @@ const ICONS = {
   pencil: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3zM15 5l4 4"/></svg>`,
   coin: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.3c-.5-.9-1.5-1.4-2.8-1.4-1.7 0-2.9.9-2.9 2.1 0 2.9 5.8 1.2 5.8 4.1 0 1.2-1.2 2.1-2.9 2.1-1.3 0-2.3-.5-2.8-1.4M12 6.2v11.6"/></svg>`,
   chev: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>`,
+  pin: `<svg class="icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76z"/></svg>`,
+  grip: `<svg class="icon-line" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`,
 };
+
+/* 物品排序選項（值存 db.itemSort；釘選的永遠浮最上，群組內再套用排序） */
+const ITEM_SORTS = [
+  ["manual", "自訂"],
+  ["name", "名稱"],
+  ["low", "剩最少"],
+  ["new", "最新"],
+];
 
 let db = load();
 let tab = "home";
@@ -58,6 +68,24 @@ function itemUsed(itemId) {
 }
 
 function unsettledLogs() { return db.logs.filter((l) => !l.settledId); }
+
+function itemLeft(it) { return Math.max(0, it.stock - itemUsed(it.id)); }
+
+/** 物品排序：釘選的一律浮到最上，釘選/未釘選群組內再套用選定的排序 */
+function sortedItems() {
+  const by = db.itemSort || "manual";
+  const order = new Map(db.items.map((it, i) => [it.id, i])); // 原始加入順序，當穩定 fallback
+  const cmp = {
+    manual: (a, b) => order.get(a.id) - order.get(b.id),
+    name: (a, b) => a.name.localeCompare(b.name, "zh-Hant"),
+    low: (a, b) => itemLeft(a) - itemLeft(b) || order.get(a.id) - order.get(b.id),
+    new: (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+  }[by] || ((a, b) => order.get(a.id) - order.get(b.id));
+  return [...db.items].sort((a, b) => {
+    if (!!b.pinned !== !!a.pinned) return b.pinned ? 1 : -1;
+    return cmp(a, b);
+  });
+}
 
 /** 每筆未結紀錄：使用者欠買家 count*price（自用不算錢）→ 合併成淨額轉帳（最少轉帳數） */
 function computeTransfers(logs) {
@@ -159,7 +187,7 @@ function renderHome() {
     return;
   }
 
-  const cards = db.items.map((it) => {
+  const cards = sortedItems().map((it) => {
     const used = itemUsed(it.id);
     const left = Math.max(0, it.stock - used);
     const pct = it.stock > 0 ? (left / it.stock) * 100 : 0;
@@ -171,16 +199,118 @@ function renderHome() {
         <span class="item-emoji" style="background:${color[0]}">${itemIcon(it.emoji)}</span>
         <span class="item-plus">＋</span>
         ${out ? '<span class="badge-out">用完啦</span>' : ""}
-        <span class="item-name">${esc(it.name)}</span>
+        <span class="item-nameline">
+          <span class="item-pin ${it.pinned ? "on" : ""}" onclick="event.stopPropagation();togglePin('${it.id}')" aria-label="${it.pinned ? "取消釘選" : "釘在最上面"}">${ICONS.pin}</span>
+          <span class="item-name">${esc(it.name)}</span>
+        </span>
         <span class="item-meta">1 個 <b>${fmt$(it.price)}</b> · 剩 <b>${left}</b>/${it.stock}</span>
         <span class="item-stock"><i style="width:${pct}%"></i></span>
         <span class="item-buyer">${avatarHTML(buyer, "sm")} ${esc(buyer.name)} 買的</span>
       </button>`;
   }).join("");
 
+  const by = db.itemSort || "manual";
+  const sortRow = db.items.length > 1
+    ? `<div class="sort-row">${ITEM_SORTS.map(([k, l]) =>
+        `<button class="sort-chip ${k === by ? "sel" : ""}" onclick="setSort('${k}')">${l}</button>`).join("")}</div>`
+    : "";
+
   view.innerHTML = `
-    <div class="section-title">共用物品 <small>點一下 = 用掉一個</small></div>
+    <div class="section-title">共用物品 ${db.items.length > 1
+      ? `<button class="title-action" onclick="sheetReorder()">${ICONS.grip} 整理順序</button>`
+      : "<small>點一下 = 用掉一個</small>"}</div>
+    ${sortRow}
     <div class="item-grid">${cards}</div>`;
+}
+
+function setSort(by) { db.itemSort = by; save(); render(); }
+
+function togglePin(id) {
+  const it = db.items.find((i) => i.id === id);
+  if (!it) return;
+  it.pinned = !it.pinned;
+  save(); render();
+  toast(it.pinned
+    ? `${itemIconText(it.emoji)}${it.name} 釘在最上面 📌`
+    : `${itemIconText(it.emoji)}${it.name} 取消釘選`);
+}
+
+/* ----- 整理順序（清單＋拖曳把手）----- */
+function sheetReorder() {
+  // 以「釘選優先＋目前自訂順序」呈現，跟物品頁自訂模式一致
+  const list = [...db.items].sort((a, b) => (!!b.pinned !== !!a.pinned ? (b.pinned ? 1 : -1) : 0));
+  const anyPinned = db.items.some((i) => i.pinned);
+  const rows = list.map((it) => `
+    <div class="reorder-item" data-id="${it.id}">
+      <span class="reorder-icon" style="background:${PALETTE[hashColor(it.id)][0]}">${itemIcon(it.emoji)}</span>
+      <span class="reorder-name">${it.pinned ? ICONS.pin : ""}${esc(it.name)}</span>
+      <span class="reorder-handle" aria-label="拖曳排序">${ICONS.grip}</span>
+    </div>`).join("");
+  openSheet(`
+    <h2>整理順序</h2>
+    <p class="sheet-sub">按住右邊的把手上下拖，排出你要的順序${anyPinned ? "（📌 釘選的會固定在最上面）" : ""}</p>
+    <div class="reorder-list" id="reorderList">${rows}</div>
+    <button class="btn btn-grad" onclick="closeSheet()">完成</button>`);
+  initReorderDrag();
+}
+
+function initReorderDrag() {
+  const list = document.getElementById("reorderList");
+  if (!list) return;
+  let drag = null, ph = null, grabDY = 0, left = 0, width = 0;
+
+  function down(e) {
+    const handle = e.target.closest(".reorder-handle");
+    if (!handle) return;
+    const row = handle.closest(".reorder-item");
+    if (!row) return;
+    e.preventDefault();
+    drag = row;
+    const r = row.getBoundingClientRect();
+    left = r.left; width = r.width; grabDY = e.clientY - r.top;
+    try { handle.setPointerCapture(e.pointerId); } catch (_) { /* 合成事件或不支援時略過 */ }
+    ph = document.createElement("div");
+    ph.className = "reorder-ph";
+    ph.style.height = r.height + "px";
+    row.after(ph);
+    row.classList.add("dragging");
+    row.style.left = left + "px";
+    row.style.width = width + "px";
+    row.style.top = (e.clientY - grabDY) + "px";
+    document.body.classList.add("reordering");
+  }
+
+  function move(e) {
+    if (!drag) return;
+    e.preventDefault();
+    drag.style.top = (e.clientY - grabDY) + "px";
+    const others = [...list.querySelectorAll(".reorder-item:not(.dragging)")];
+    let placed = false;
+    for (const row of others) {
+      const r = row.getBoundingClientRect();
+      if (e.clientY < r.top + r.height / 2) { list.insertBefore(ph, row); placed = true; break; }
+    }
+    if (!placed) list.appendChild(ph);
+  }
+
+  function up() {
+    if (!drag) return;
+    ph.replaceWith(drag);
+    drag.classList.remove("dragging");
+    drag.style.left = drag.style.width = drag.style.top = "";
+    document.body.classList.remove("reordering");
+    drag = ph = null;
+    const ids = [...list.querySelectorAll(".reorder-item")].map((el) => el.dataset.id);
+    const byId = new Map(db.items.map((it) => [it.id, it]));
+    db.items = ids.map((id) => byId.get(id)).filter(Boolean);
+    db.itemSort = "manual"; // 手動排完就切到自訂，物品頁立刻反映
+    save(); render();
+  }
+
+  list.addEventListener("pointerdown", down);
+  list.addEventListener("pointermove", move);
+  list.addEventListener("pointerup", up);
+  list.addEventListener("pointercancel", up);
 }
 
 function hashColor(id) {
@@ -534,8 +664,9 @@ function sheetUseItem(itemId) {
       <div class="pick-grid">${members}</div>`
       : `<div class="empty" style="padding:18px"><img class="empty-gif" src="public/Assets/outofstock.gif" alt="" width="200" height="200"><p>用完啦！要再買記得補貨</p></div>`}
     <div class="sheet-links">
+      <button onclick="sheetEditItem('${it.id}')">${ICONS.pencil} 編輯</button>
       <button onclick="sheetRestock('${it.id}')">${ICONS.box} 補貨</button>
-      <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除物品</button>
+      <button class="danger" onclick="delItem('${it.id}')">${ICONS.trash} 刪除</button>
     </div>`);
 }
 
@@ -559,6 +690,54 @@ function changeIcon(itemId, btn) {
   save(); render();
   sheetUseItem(itemId);
   toast(`${itemIconText(it.emoji)}${it.name} 換上新圖示！`);
+}
+
+/* 使用面板 → 編輯物品：改名稱／圖示／單價／數量／誰買的（修正打錯） */
+function sheetEditItem(itemId) {
+  const it = db.items.find((i) => i.id === itemId);
+  if (!it) return;
+  const emojis = ITEM_EMOJIS.map((e) =>
+    `<button class="emoji-opt ${e === it.emoji ? "sel" : ""}" data-emoji="${e}" onclick="pickEmoji(this)">${itemIcon(e)}</button>`).join("");
+  const buyers = db.members.map((m) =>
+    `<button class="chip ${m.id === it.buyerId ? "sel" : ""}" data-id="${m.id}" onclick="pickChip(this)">${avatarHTML(m, "sm")} ${esc(m.name)}</button>`).join("");
+  const used = itemUsed(it.id);
+  const hasUnsettled = unsettledLogs().some((l) => l.itemId === it.id && l.memberId !== l.buyerId);
+  openSheet(`
+    <h2>編輯物品</h2>
+    <p class="sheet-sub">打錯了？改名稱、單價、數量、誰買的都可以</p>
+    <div class="field"><label>圖示</label><div class="emoji-row" id="fItemEmoji">${emojis}</div></div>
+    <div class="field"><label>名稱</label><input id="fItemName" class="input" maxlength="12" value="${esc(it.name)}"></div>
+    <div class="field-row">
+      <div class="field"><label>1 個多少錢</label><input id="fItemPrice" class="input" type="number" inputmode="decimal" value="${it.price}"></div>
+      <div class="field"><label>買了幾個</label><input id="fItemStock" class="input" type="number" inputmode="numeric" value="${it.stock}"></div>
+    </div>
+    <div class="field"><label>誰買的（用的人付錢給他）</label><div class="chip-row" id="fItemBuyer">${buyers}</div></div>
+    ${used > 0 ? `<p class="sheet-sub" style="margin-top:-8px">目前這批已用掉 ${used} 個，數量不能少於這個數。</p>` : ""}
+    ${hasUnsettled ? `<p class="sheet-note">已經記過的使用，還是照當初的單價／買家算；改這裡只影響之後的紀錄。</p>` : ""}
+    <button class="btn btn-grad" onclick="saveItem('${it.id}')">改好了 ${ICONS.pencil}</button>`);
+  sheetRoot.querySelector("#fItemEmoji .emoji-opt.sel")?.scrollIntoView({ inline: "center", block: "nearest" });
+}
+
+function saveItem(itemId) {
+  const it = db.items.find((i) => i.id === itemId);
+  if (!it) return;
+  const name = $("#fItemName").value.trim();
+  const price = parseFloat($("#fItemPrice").value);
+  const stock = parseInt($("#fItemStock").value, 10);
+  const buyerId = $("#fItemBuyer .sel")?.dataset.id;
+  const emoji = $("#fItemEmoji .sel")?.dataset.emoji || it.emoji;
+  if (!name) { toast("要填名稱喔 ✍️"); return; }
+  if (!(price > 0)) { toast("單價要大於 0 💰"); return; }
+  if (!(stock > 0)) { toast("數量要至少 1 個 🔢"); return; }
+  const used = itemUsed(it.id);
+  if (stock < used) { toast(`已經用掉 ${used} 個，數量不能少於這個數 🔢`); return; }
+  it.name = name;
+  it.emoji = emoji;
+  it.price = price;
+  it.stock = stock;
+  if (buyerId) it.buyerId = buyerId;
+  save(); closeSheet(); render();
+  toast(`${itemIconText(it.emoji)}${it.name} 更新完成！`);
 }
 
 function stepUse(d) {
@@ -780,6 +959,7 @@ Object.assign(window, {
   switchAvatarTab, pickAvatar, sheetEditMember, saveMember,
   sheetRenameLedger, renameLedger,
   sheetAddItem, applyPreset, addItem,
+  setSort, togglePin, sheetReorder, sheetEditItem, saveItem,
   sheetUseItem, stepUse, useItem, undoUse, delLog,
   sheetChangeIcon, changeIcon,
   sheetRestock, restock, toggleRestockReset, delItem,
